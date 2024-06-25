@@ -1,0 +1,1 @@
+.\mcrcon.exe -H localhost -P 30075 -p todopassword
