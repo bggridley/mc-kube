@@ -1,0 +1,122 @@
+## FORGE MODS CONFIG MAP
+## The mod mousetweaks is only supposed to be clientside... need to find a better one to test lol
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mods-map
+data:
+  mods.txt: |
+    https://edge.forgecdn.net/files/5437/297/MouseTweaks-forge-mc1.21-2.26.jar
+---
+## ROUTER FORGE
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mc-forge
+  annotations:
+    "mc-router.itzg.me/externalServerName": "forge.127.0.0.1.nip.io"
+spec:
+  ports:
+    - port: 25565
+  selector:
+    run: mc-forge
+
+---
+#### FORGE
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: mc-forge
+  name: mc-forge
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: mc-forge
+  template:
+    metadata:
+      labels:
+        run: mc-forge
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      volumes:
+        - name: mcf-pv-storage
+          persistentVolumeClaim:
+            claimName: mcf-pvc
+        - name: mods-volume
+          configMap:
+            name: mods-map
+      containers:
+        - name: mc-forge-server
+          image: itzg/minecraft-server
+          imagePullPolicy: Never
+          env:
+            - name: EULA
+              value: "TRUE"
+            - name: MOTD
+              value: "A forge server!"
+            - name: OVERRIDE_SERVER_PROPERTIES
+              value: "TRUE"
+            - name: MODS_FILE
+              value: "mods.txt"
+            # - name: VERSION
+            #   value: 1.15.2
+            - name: REMOVE_OLD_MODS
+              value: "true"
+            - name: TYPE
+              value: FORGE
+          livenessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          volumeMounts:
+            - mountPath: "/data"
+              name: mcf-pv-storage
+            - mountPath: /data/mods.txt
+              subPath: mods.txt
+              name: mods-volume
+
+# #### FORGE NODEPORT
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: mc-forge-entrypoint
+#   namespace: default
+# spec:
+#   type: NodePort
+#   selector:
+#     mc-forge: web
+#   ports:
+#     - port: 25565
+#       targetPort: 25565
+#       nodePort: 30065
+# ## fix rcon later
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: mc-forge-rcon
+#   namespace: default
+# spec:
+#   type: NodePort
+#   selector:
+#     mc-forge: web
+#   ports:
+#     - port: 25575
+#       targetPort: 25575
+#       nodePort: 30075

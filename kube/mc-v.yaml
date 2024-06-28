@@ -1,0 +1,96 @@
+## ROUTER VANILLA
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mc-vanilla
+  annotations:
+    "mc-router.itzg.me/externalServerName": "vanilla.127.0.0.1.nip.io"
+spec:
+  ports:
+    - port: 25565
+  selector:
+    run: mc-vanilla
+
+---
+#### VANILLA
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: mc-vanilla
+  name: mc-vanilla
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: mc-vanilla
+  template:
+    metadata:
+      labels:
+        run: mc-vanilla
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+      volumes:
+        - name: mcv-pv-storage
+          persistentVolumeClaim:
+            claimName: mcv-pvc
+      containers:
+        - name: mc-vanilla
+          image: itzg/minecraft-server
+          imagePullPolicy: Never
+          env:
+            - name: EULA
+              value: "TRUE"
+          ports:
+            - containerPort: 25565
+          livenessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 25565
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          volumeMounts:
+            - mountPath: "/data"
+              name: mcv-pv-storage
+#### VANILLA NODEPORT
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: mc-vanilla-entrypoint
+#   namespace: default
+# spec:
+#   type: NodePort
+#   selector:
+#     mc-vanilla: web
+#   ports:
+#     - port: 25565
+#       targetPort: 25565
+#       nodePort: 30065
+
+# ## fix rcon later
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mc-vanilla-rcon
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    run: mc-vanilla
+  ports:
+    - port: 25575
+      targetPort: 25575
+      nodePort: 25575

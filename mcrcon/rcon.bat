@@ -1,1 +1,1 @@
-.\mcrcon.exe -H localhost -P 30075 -p todopassword
+.\mcrcon.exe -H localhost -P 25575 -p dec0d85a349c8aaa293d708d
