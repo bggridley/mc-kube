@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: mc-pv
+  name: mcv-pv
   labels:
     type: local
 spec:
@@ -16,7 +16,37 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mc-pvc
+  name: mcv-pvc
+spec:
+  resources:
+    requests:
+      storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+
+
+### FORGE
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mcf-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mcf-pvc
 spec:
   resources:
     requests:

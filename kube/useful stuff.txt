@@ -1,1 +1,3 @@
+sudo ctr -n k8s.io images pull itzg/minecraft-server
+sudo docker save -o minecraft-server.tar itzg/minecraft-server
 kubectl exec -it <pod> -- nano /data/server.properties
